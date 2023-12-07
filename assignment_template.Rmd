@@ -1,0 +1,419 @@
+---
+title: "Homework Template"
+output:
+  html_document: default
+  pdf_document: default
+date: "2023-10-09"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+*The following is a template .rmd RMarkdown file for you to use for your homework submission.*
+
+*Please Knit your .rmd to a PDF format or HTML and submit that with no identifiers like your name.*
+
+*To create a PDF, first install tinytex and load the package. Then press the Knit arrow and select "Knit to PDF".*
+
+## QUESTION 01: Data Visualisation for Science Communication
+
+*Create a figure using the Palmer Penguin dataset that is correct but badly communicates the data. **Do not make a boxplot**.*
+
+*Use the following references to guide you:*
+
+-   [*https://www.nature.com/articles/533452a*](https://www.nature.com/articles/533452a){.uri}
+-   [*https://elifesciences.org/articles/16800*](https://elifesciences.org/articles/16800){.uri}
+
+*Note: Focus on visual elements rather than writing misleading text on it.*
+
+### a) Provide your figure here:
+
+```{r bad figure code, echo=FALSE}
+
+# Install packages:
+install.packages(c("ggplot2", "palmerpenguins", "janitor", "dplyr"))
+
+# Load the packages:
+library(ggplot2)
+library(palmerpenguins)
+library(janitor)
+library(dplyr)
+
+# Look at the table with the raw data
+head(penguins_raw)
+
+# Export data from the palmerpenguins package
+write.csv(penguins_raw, "data/penguins_raw.csv")
+
+# Load data from working directory
+penguins_raw <- read.csv("data/penguins_raw.csv")
+
+# Define Function for cleaning
+clean_function <- function(penguins_data) {
+    penguins_data %>%
+        select(-starts_with("Delta")) %>%
+        select(-Comments) %>%
+        clean_names()
+}
+
+# Call Function
+penguins_clean <- clean_function(penguins_raw)
+
+# Check the column names in the new data frame
+names(penguins_clean)
+
+# filter the data
+body_mass_clean <- penguins_clean %>%
+  select(body_mass_g, flipper_length_mm, species, sex) %>%
+  na.omit()
+
+# Create the bad graph 
+(bodymass_scatterplot <- ggplot(data = body_mass_clean, aes(x = flipper_length_mm, y = body_mass_g)) + 
+  geom_point(size = 3, aes(fill = sex)) +
+    ylab("body mass") +
+    xlab("flipper length") +
+    ylim(c(0, 7000)) +
+    xlim(c(0, 240))
+)
+
+# There is no need to provide the code for your bad figure, just use echo=FALSE so the code is hidden. Make sure your figure is visible after you knit it. 
+
+```
+
+### b) Write about how your design choices mislead the reader about the underlying data (200-300 words).
+
+The intention of this figure is to illustrate the relationship between body mass and flipper size across three Brush-tailed penguin species. However, there are several issues with the design of the plot that make the relationship difficult to interpret. The graph lacks a title and so the reader cannot discern whether it represents a correlation analysis or a linear regression analysis. A correlation analysis measures the strength and direction of a linear relationship, whereas a linear regression analysis measures the effect of an independent variable upon a dependent variable, and so the two must be distinguished [1]. The current arrangement of axes may suggest to the reader that flipper size is the explanatory variable, however, this is not necessarily the case. The labels lack units and therefore the numerical scales for both variables are arbitrary, preventing the reader from conceptualizing the data. The scales themselves extend beyond what is needed to fully encapsulate the distributions of both variables, and hence the results are densely clustered. This is spatially inefficient, and does not illustrate the spread of the data to the reader, which in turn makes the nature of the relationship more difficult to interpret. The formatting of data points is problematic, as their size is too large to distinguish between individual points, which again prevents the reader from observing the spread of data [2]. As well as this, there is no colour differentiation between male and female data points, which renders the legend useless, and prevents the reader from observing any sexual dimorphisms in these two physiological traits. There is also no way of deciphering what species a data point belongs to, and this omits potentially important interspecific variation. Finally, a trend line could have been added to suggest a pattern in the data to the reader before beginning hypothesis testing.
+
+
+References:
+
+[1] Bewick, V., Cheek, L. and Ball, J., 2003. Statistics review 7: Correlation and regression. Critical care, 7, pp.1-9.
+
+[2] Micallef, L., Palmas, G., Oulasvirta, A. and Weinkauf, T., 2017. Towards perceptual optimization of the visual design of scatterplots. IEEE transactions on visualization and computer graphics, 23(6), pp.1588-1599.
+
+------------------------------------------------------------------------
+
+## QUESTION 2: Data Pipeline
+
+*Write a data analysis pipeline in your .rmd RMarkdown file. You should be aiming to write a clear explanation of the steps, the figures visible, as well as clear code.*
+
+*Your code should include the steps practiced in the lab session:*
+
+-   *Load the data*
+
+-   *Appropriately clean the data*
+
+-   *Create an Exploratory Figure (**not a boxplot**)*
+
+-   *Save the figure*
+
+-   ***New**: Run a statistical test*
+
+-   ***New**: Create a Results Figure*
+
+-   *Save the figure*
+
+*An exploratory figure shows raw data, such as the distribution of the data. A results figure demonstrates the stats method chosen, and includes the results of the stats test.*
+
+*Between your code, communicate clearly what you are doing and why.*
+
+*Your text should include:*
+
+-   *Introduction*
+
+-   *Hypothesis*
+
+-   *Stats Method*
+
+-   *Results*
+
+-   *Discussion*
+
+-   *Conclusion*
+
+*You will be marked on the following:*
+
+### a) Your code for readability and functionality
+
+### b) Your figures for communication
+
+### c) Your text communication of your analysis
+
+*Below is a template you can use.*
+
+------------------------------------------------------------------------
+
+### Introduction
+
+The palmerpenguins dataset contains size measurements for three penguin species observed on three islands in the Palmer Archipelago, Antartica. Gentoo, Adelie, and Chinstrap penguins are the three extant members of the Pygoscelis genus, also known as Brush-tail penguins. Mitochondrial and nuclear DNA evidence suggest that the genus split from other penguins around 38 million years ago. Gentoo and Chinstrap penguins comprise a sister group, as Adelie penguins diverged from other members of the genus around 19 million years ago [3].
+
+Penguins are flightless birds, with wings morphed by evolution into flippers, used to propel themselves underwater. It is reasonable to assume that larger penguins require larger flippers in order to create more powerful swimming strokes. This study aims to evidence this proposed association between body mass and flipper length.
+
+Adelie penguins are a sexually dimorphic species, with adult males averaging larger than adult females in mass (~11%) and flipper length (~3%) [4]. As the male and female phenotype differs, it is possible that the strength of relationship between body mass and flipper length also differs between the sexes. An additional aim of this study is to test for a difference in correlation of these two variables, between male and female penguins.
+
+
+References:
+
+[3] Baker, A.J., Pereira, S.L., Haddrath, O.P. and Edge, K.A., 2006. Multiple gene evidence for expansion of extant penguins out of Antarctica due to global cooling. Proceedings of the Royal Society B: Biological Sciences, 273(1582), pp.11-17.
+
+[4] Jennings, S., Varsani, A., Dugger, K.M., Ballard, G. and Ainley, D.G., 2016. Sex-based differences in Adélie penguin (Pygoscelis adeliae) chick growth rates and diet. PLoS One, 11(3), p.e0149090.
+
+```{r Data Exploration}
+
+# Install packages
+install.packages(c("ggplot2", "palmerpenguins", "janitor", "dplyr", "ragg"))
+
+# Load packages
+library(ggplot2)
+library(palmerpenguins)
+library(janitor)
+library(dplyr)
+library(ragg)
+
+# Load functions into rmd file
+source("functions/cleaning.r")
+
+# Export data from the palmerpenguins package
+write.csv(penguins_raw, "data/penguins_raw.csv")
+
+# Load data from working directory
+penguins_raw <- read.csv("data/penguins_raw.csv")
+
+# View raw data
+names(penguins_raw)
+
+# Clean data using pre-loaded cleaning functions
+penguins_clean <- penguins_raw %>% 
+  clean_column_names() %>%     # simplifies column names
+  shorten_species() %>%        # simplifies species names
+  remove_empty_columns_rows()  # Removes any empty columns or rows
+
+# View cleaned data
+names(penguins_clean)
+
+# Save cleaned data to working directory
+write.csv(penguins_clean, "data/penguins_clean.csv")
+
+# Filter data using pre-loaded sub-setting functions
+bodymass_flipper_data <- penguins_clean %>% 
+  filter_by_species("Adelie") %>% 
+  subset_columns(c("body_mass_g", "flipper_length_mm", "species", "sex")) %>%  
+  remove_NA()
+
+# View filtered data
+names(bodymass_flipper_data)
+head(bodymass_flipper_data)
+
+# Create exploratory plot for body mass and flipper length
+exploratory_plot <- ggplot(data = bodymass_flipper_data, aes(x = body_mass_g, y = flipper_length_mm, color = sex)) +
+  geom_point() +
+    labs(title = "Body mass and flipper size for Adelie penguins", x = "Body mass (g)", y = "Flipper length (mm)", color = "Sex") +
+    theme_bw() 
+
+
+# Create a function to save plot as png file
+agg_png("Figures/exploratory_plot.png", 
+width = 20, height = 15, units = "cm", res = 600, scaling = 1)
+exploratory_plot
+dev.off()
+
+
+# Make sure your code prints. 
+```
+
+The exploratory plot above reveals two noteworthy trends:
+1) There appears to be a linear correlation between body mass and flipper length.
+2) The distributions of both variables appear to differ between the sexes.
+
+
+### Hypotheses
+
+1st:
+There is a significant positive correlation between the body mass and flipper length of Adelie penguins.
+
+2nd:
+The difference between correlation coefficients for male and female penguins is significant.
+
+
+### Statistical Methods
+
+Linear regression model:
+
+A linear regression analysis was used to investigate the relationship between body mass and flipper length. Body mass was treated as the independent variable, to quantify the extent to which variation in flipper length is explained by variation in body mass. The p-value produced by the linear model was compared to a signficance level of 0.05.
+
+Package used - Base R statistics
+
+
+Step 2 - Fisher's Z-test
+
+Fisher's Z-test was used to test whether the difference between correlation coefficients for each sex was significant. Pearson's correlation coefficient was calculated separately for males and females. The correlation coefficients were transformed into z-scores using the Fisher transformation. The transformed values approximately follow a normal distribution, making the comparison more appropriate for statistical testing. The test statistic was calculated from the z-scores, providing a standardized measure of the difference between correlation coefficients. Finally, the p-value was calculated and compared to a significance level of 0.05.
+
+
+Packages used - Base R statistics, diffcor
+
+
+```{r Statistics}
+
+# STEP 1 - Linear regression model 
+
+# Run linear model 
+linear_model <- lm(flipper_length_mm ~ body_mass_g, data = bodymass_flipper_data)
+
+# Print summary 
+summary(linear_model)
+
+
+
+# STEP 2 - Fisher's Z-test 
+
+# Install diffcor package
+install.packages("diffcor")
+
+#Load diffcor package
+library(diffcor)
+
+# Partition data by sex using filter() function 
+male <- filter(bodymass_flipper_data, sex == "MALE")
+female <- filter(bodymass_flipper_data, sex == "FEMALE")
+
+# Calculate correlation coefficients for each sex
+cor_male <- cor(male$body_mass_g, male$flipper_length_mm)  
+cor_female <- cor(female$body_mass_g, female$flipper_length_mm)  
+
+# Calculate sample sizes
+n_male <- nrow(male)  
+n_female <- nrow(female)  
+
+# Perform Fisher's Z-test for differences of correlations in two independent samples, using diffcor package
+z_test_result <- diffcor.two(
+  r1 = cor_male,
+  r2 = cor_female,
+  n1 = n_male,
+  n2 = n_female,
+  alpha = 0.05,
+  cor.names = "Body Mass vs Flipper Length",
+  alternative = "two.sided",
+  digit = 3
+)
+
+# print result
+print(z_test_result)
+
+# r1 - male correlation coefficient
+# r2 - female correlation coefficient
+# z - test statistic for correlation difference in units of z distribution
+# p - p value for two-sided test
+
+
+```
+
+### Results Figure
+
+```{r Plotting Results}
+
+# Create results figure
+results_figure <- ggplot(bodymass_flipper_data, aes(x = body_mass_g, y = flipper_length_mm, color = sex)) +
+   geom_point() +
+   geom_smooth(method = "lm", se = FALSE, linewidth = 0.8, color = "black") +
+  theme_bw() +
+  labs(
+    title = "Adelie Penguins: The Relationship between Body mass & Flipper Length",
+    x = "Body Mass (g)",
+    y = "Flipper Length (mm)",
+    color = "Sex"
+  ) +
+  annotate(
+    "text",
+    x = Inf, y = -Inf, hjust = 2.77, vjust = -30,
+    label = sprintf("Linear Model p-value: %s", format(summary(linear_model)$coefficients[2, 4], scientific = TRUE, digits = 2)),
+  ) +
+  annotate(
+    "text",
+    x = Inf, y = -Inf, hjust = 1.15, vjust = -7,
+    label = sprintf("ρ (♂): %.3f", cor_male),
+  ) +
+  annotate(
+    "text",
+    x = Inf, y = -Inf, hjust = 1.15, vjust = -5,
+    label = sprintf("ρ (♀): %.3f", cor_female),
+  ) +
+  annotate(
+    "text",
+    x = Inf, y = -Inf, hjust = 1.1, vjust = -3,
+    label = sprintf("Z-test p-value: %s", z_test_result$p),
+  ) +
+  annotate(
+    "text",
+    x = Inf, y = -Inf, hjust = 2.55, vjust = -28,
+    label = ("Positive correlation is significant")
+  ) +
+  annotate(
+    "text",
+    x = Inf, y = -Inf, hjust = 1.04, vjust = -1,
+    label = ("Difference between ρ(♂) & ρ(♀) is not significant")
+  )
+
+
+  
+  
+results_figure
+
+# Create a function to save plot as png file
+agg_png("Figures/results_figure.png", 
+width = 20, height = 11, units = "cm", res = 600, scaling = 1)
+results_figure
+dev.off()
+
+# Make sure your code prints. 
+
+```
+
+### Results & Discussion
+
+The results of the linear regression analysis revealed a strong positive relationship between body mass and flipper length for Adelie penguins (p < 0.05). This result therefore supports the 1st hypothesis.
+
+An R-squared value of 0.2106 suggests that approximately 21.06% of variance in flipper length can be explained by changes in body mass. Therefore, although changes in body mass explain a significant proportion of the variance in flipper length, there are other factors contributing to this variation.
+
+In addition to the linear regression analysis, Fisher's z-test was employed to assess whether the difference between correlation coefficients for males and females was significant. A p-value of 0.522 indicates that this is not the case, and so the 2nd hypothesis was rejected.
+
+### Conclusion
+
+To conclude, this study has provided convincing evidence to support the notion that body mass and flipper length are positively correlated in Adelie penguins. This relationship likely extends beyond the focal species of this study, and so wider conclusions about penguin physiology can be made with further research.
+
+The sex-specific analysis of this relationship revealed that the strength of the correlation between these two variables is equal for males and females. This provides evidence to suggest that sexual dimorphisms do not impact the ratio of body mass to flipper length.
+
+
+------------------------------------------------------------------------
+
+## QUESTION 3: Open Science
+
+### a) GitHub
+
+*Upload your RProject you created for **Question 2** and any files and subfolders used to GitHub. Do not include any identifiers such as your name. Make sure your GitHub repo is public.*
+
+*GitHub link:*
+
+*You will be marked on your repo organisation and readability.*
+
+### b) Share your repo with a partner, download, and try to run their data pipeline.
+
+*Partner's GitHub link:*
+
+*You **must** provide this so I can verify there is no plagiarism between you and your partner.*
+
+### c) Reflect on your experience running their code. (300-500 words)
+
+-   *What elements of your partner's code helped you to understand their data pipeline?*
+
+-   *Did it run? Did you need to fix anything?*
+
+-   *What suggestions would you make for improving their code to make it more understandable or reproducible, and why?*
+
+-   *If you needed to alter your partner's figure using their code, do you think that would be easy or difficult, and why?*
+
+### d) Reflect on your own code based on your experience with your partner's code and their review of yours. (300-500 words)
+
+-   *What improvements did they suggest, and do you agree?*
+
+-   *What did you learn about writing code for other people?*
